@@ -7,7 +7,7 @@ class SignupForm(FlaskForm):
     email = EmailField('email', validators=[DataRequired(), Email()])
     #email : 필수 입력 항목이며, 이메일 형식을 유지
     #validators = 유효성 검사기, 문자열의 최대 길이와 같은 몇 가지 기준을 충족하는지 학인하고 반환한다
-    #DataRequred() = 필드의 데이터가 True인지 확인하지 않으면 유효성 검사를 중지한다.
+    #DataRequired() = 필드의 데이터가 True인지 확인하지 않으면 유효성 검사를 중지한다.
     
     username = StringField('username', validators=[DataRequired(), Length(4,30)])
     #username = 필수 입력 항목이며, 글자수가 최소 4글자부터 최대 30글자까지 허용
@@ -15,7 +15,7 @@ class SignupForm(FlaskForm):
     password1 = PasswordField('password1', validators=[DataRequired(), Length(8,30)])
     EqualTo("password2", message="Password must match! XD") #두 필드값 비교
     password2 = PasswordField('password2', validators=[DataRequired()])
-    #password1 : 필수 입력 항목이며, 글자수가 최소 8글자부터 최대 30글자까지 허용, passwrord2와 값이 같아야함
+    #password1 : 필수 입력 항목이며, 글자수가 최소 8글자부터 최대 30글자까지 허용, password2와 값이 같아야함
 
 class LoginForm(FlaskForm):
     email = EmailField('email', validators=[DataRequired(), Email()])
