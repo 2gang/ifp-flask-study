@@ -2,6 +2,8 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from os import path
 from flask_login import LoginManager    #flask_login = 로그인 기능을 쉽게 구현할 수 있도록 도와주는 라이브러리
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
 
 from pprint import pprint
 db = SQLAlchemy()
@@ -11,7 +13,15 @@ def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = "IFP"
     
+    # DB 설정하기
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
+    # DB 관련 추가할 설정
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+     # flask-admin
+    app.config['FLASK_ADMIN_SWATCH'] = 'Darkly'
+    admin = Admin(app, name='blog',
+                  template_mode='bootstrap3')
     db.init_app(app)
     
     from .views import views
