@@ -1,4 +1,5 @@
 from flask import Flask
+from .models import DB_NAME, db, get_user_model
 from flask_sqlalchemy import SQLAlchemy
 from os import path
 from flask_login import LoginManager    #flask_login = 로그인 기능을 쉽게 구현할 수 있도록 도와주는 라이브러리
@@ -6,8 +7,6 @@ from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 
 from pprint import pprint
-db = SQLAlchemy()
-DB_NAME = "blog_db"
 
 def create_app():
     app = Flask(__name__)
@@ -22,6 +21,10 @@ def create_app():
     app.config['FLASK_ADMIN_SWATCH'] = 'Darkly'
     admin = Admin(app, name='blog',
                   template_mode='bootstrap3')
+    
+    # flask-admin에 model 추가
+    admin.add_view(ModelView(get_user_model(), db.session)) 
+    # get_user_model 로 유저 클래스를 가져옴
     db.init_app(app)
     
     from .views import views
@@ -29,7 +32,7 @@ def create_app():
     from .auth import auth
     app.register_blueprint(auth, url_prefix="/auth")
     
-    from .models import User    #db 생성하는 함수 호출
+    #db 생성하는 함수 호출
     create_database(app)
     
     login_manager = LoginManager()  #LoginManager() 객체 생성
@@ -41,7 +44,7 @@ def create_app():
     
     @login_manager.user_loader  #사용자 정보 조회
     def load_user_by_id(id):
-        return User.query.get(int(id))  #유저 id를 받아와서 그 유저의 정보를 반환
+        return get_user_model().query.get(int(id))  #유저 id를 받아와서 그 유저의 정보를 반환
       
     return app
 
