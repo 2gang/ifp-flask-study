@@ -19,3 +19,24 @@ class User(db.Model, UserMixin):
 # User 클래스를 반환하는 함수 정의
 def get_user_model():
     return User
+
+class Post(db.Model):
+    id = db.Column(db.Integer, primary_key=True)    #유일키
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Colum(db.Text(), nullable=False)
+    created_at = db.Column(db.DateTime(Timezone=True), default = func.now)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'),
+                          nullable=False) #외래 키, user 테이블의 id를 참조, user.id가 삭제되면 같이 삭제됨
+    user = db.relationship('user', backref = db.backref('posts', cascade='delete'))
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id', ondelete='CASCADE')
+                            , nullable=False) #외래 키, category 테이블의 id를 참조, category.id가 삭제되면 같이 삭제됨  
+    category = db.relationship('Category', backref=db.backref('category',cascade='delete'))
+    # comments = db.relationship("Comment", backref="post", passive_deletes=True)
+    
+    
+class Category(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150), unique=True)
+    
+    def __repr__(self):
+        return f'<{self.__class__.___name__}(name={self.name})>'
