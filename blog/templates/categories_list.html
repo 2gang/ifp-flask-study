@@ -1,31 +1,44 @@
 {% extends 'base.html' %}
 
-{% block title %}This is home.{% endblock %}
+{% block title %}All Categories{% endblock %}
 
 {% block header %}
-        <!-- Page Header-->
-        <header class="masthead" style="background-image: url('{{url_for('static', filename = 'assets/img/ipad.png')}}')">
-            <div class="container position-relative px-4 px-lg-5">
-                <div class="row gx-4 gx-lg-5 justify-content-center">
-                    <div class="col-md-10 col-lg-8 col-xl-7">
-                        <div class="page-heading">
-                            <h1>Category</h1>
-                        </div>
+    <!-- Page Header-->
+    <header class="masthead"
+            style="background-image: url({{ url_for('static', filename='assets/img/categories-bg.jpeg') }})">
+        <div class="container position-relative px-4 px-lg-5">
+            <div class="row gx-4 gx-lg-5 justify-content-center">
+                <div class="col-md-10 col-lg-8 col-xl-7">
+                    <div class="site-heading">
+                        <h1>All Categories</h1>
+                        <span class="subheading">Blog categories...</span>
                     </div>
                 </div>
             </div>
-        </header>
-    {% endblock %}
+        </div>
+    </header>
+{% endblock %}
 
-    {% block content %}
-        <!-- Post Content-->
-        <article class="mb-4">
-            <div class="container px-4 px-lg-5">
-                <div class="row gx-4 gx-lg-5 justify-content-center">
-                        <p><h1>Python</h1></p>
-                        <hr>
-                        <p><h1>JavaScript</h1></p>
-                </div>
+{% block content %}
+    <!-- Main Content-->
+    <div class="container px-4 px-lg-5">
+        <div class="row gx-4 gx-lg-5 justify-content-center">
+            <div class="col-md-10 col-lg-8 col-xl-10">
+
+
+                {% for category in categories %}
+                    <!-- Category item-->
+                    <div class="post-preview">
+                        <a href="post_detail.html">
+                            <h2 class="post-title">{{ category.name }}</h2>
+                        </a>
+                    </div>
+                    <!-- Divider-->
+                    <hr class="my-4"/>
+                {% endfor %}
+
+
             </div>
-        </article>
-    {% endblock %}
+        </div>
+    </div>
+{% endblock %}
