@@ -13,10 +13,11 @@ def blog_home():
 def about():
     return render_template("about.html", user=current_user)
 
-@views.route('/categories-list')
+# 모든 카테고리들의 목록을 보여줌
+@views.route("/categories-list")
 def categories_list():
-    categories = get_category_model().query.all() #모든 카테고리를 가져오고,
-    #아래에서 context로 추가해 준다.
+    categories = get_category_model().query.all()  # 모든 카테고리들을 가져오고,
+    # 아래에서 context 로 그것을 추가해 준다.
     return render_template("categories_list.html", user=current_user, categories=categories)
 
 @views.route("/post-list")
@@ -32,5 +33,7 @@ def contact():
     return render_template("contact.html", user=current_user)
 
 @views.route("/create-post")
+@login_required
 def create_post():
-    return render_template("post_create_form.html", user=current_user)
+    categories = get_category_model().query.all()
+    return render_template("post_create_form.html", user=current_user, categories=categories)

@@ -16,6 +16,8 @@ class User(db.Model, UserMixin):
     create_at = db.Column(db.DateTime(timezone=True), default=func.now()) # 생성일자,기본적으로 현재로 저장
     is_staff = db.Column(db.Boolean(), default = False) # 스태프 권한이 있는 유저인지 아닌지를 판별하는 불리언 필드
     
+    def __repr__(self):
+        return f'<{self.__class__.__name__}(username={self.username})>'
 # User 클래스를 반환하는 함수 정의
 def get_user_model():
     return User
@@ -33,6 +35,8 @@ class Post(db.Model):
     category = db.relationship('Category', backref=db.backref('category',cascade='delete'))
     # comments = db.relationship("Comment", backref="post", passive_deletes=True)
     
+    def __repr__(self):
+        return f'<{self.__class__.__name__}(title={self.title})>'
 def get_post_model():
     return Post 
     
