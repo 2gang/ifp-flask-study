@@ -137,15 +137,14 @@ class TestPostwithCategory(unittest.TestCase):
     '''
     1. 임의의 카테고리를 넣어본 후, 데이터베이스에 카테고리가 잘 추가되어 있는지 확인한다.
     2. 카테고리를 넣은 후, /categories-list 에 접속했을 때, 넣었던 카테고리들이 잘 추가되어 있는지 확인한다. 
-    3. 게시물을 작성할 때에, 로그인하지 않았고, 스태프 권한을 가지고 있지 않다면 접근이 불가능해야 한다.
-        - 스태프 권한을 가지고 있지 않은 사용자 1명, 게시물 작성 페이지에 접근할 수 없어야 한다.
-        - 스태프 권한을 가지고 있는 사용자 1명, 게시물 작성 페이지에 접근할 수 있어야 한다.
+    3. 게시물을 작성할 때에, 로그인하지 않았다면 접근이 불가능해야 한다.
     4. 임의의 카테고리를 넣어본 후,
         웹 페이지에서 폼으로 게시물을 추가할 때에 option 태그에 값이 잘 추가되는지,
         게시물을 추가한 후 게시물은 잘 추가되어 있는지
         저자는 로그인한 사람으로 추가되어 있는지 확인한다.
+
     '''
-    
+
     def test_add_category_and_post(self):
         # 이름 = "python" 인 카테고리를 하나 추가하고,
         self.python_category = get_category_model()(
@@ -224,9 +223,8 @@ class TestPostwithCategory(unittest.TestCase):
         # 게시물 페이지에서, 로그인했던 유저의 이름이 저자로 잘 표시되는지?
         author_wrapper = soup.find(id='author-wrapper')
         self.assertIn("hello", author_wrapper.text)
-        
+
         db.session.close()
-    
-    
+
 if __name__ == "__main__":
     unittest.main()
