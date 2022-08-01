@@ -33,9 +33,15 @@ class Post(db.Model):
     category = db.relationship('Category', backref=db.backref('category',cascade='delete'))
     # comments = db.relationship("Comment", backref="post", passive_deletes=True)
     
+def get_post_model():
+    return Post 
+    
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)    #유일키
     name = db.Column(db.String(150), unique=True)
     
     def __repr__(self):
         return f'<{self.__class__.__name__}(name={self.name})>'
+
+def get_category_model():
+    return Category
