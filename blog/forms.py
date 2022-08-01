@@ -20,3 +20,8 @@ class SignupForm(FlaskForm):
 class LoginForm(FlaskForm):
     email = EmailField('email', validators=[DataRequired(), Email()])
     password = PasswordField('password', validators=[DataRequired()])
+    
+class PostForm(FlaskForm):
+    title = StringField('title', validators=[DataRequired()])
+    content = TextAreaField('content', validators=[DataRequired()])
+    category = StringField('category', validators=[DataRequired()])
