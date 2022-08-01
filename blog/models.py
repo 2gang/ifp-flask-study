@@ -35,7 +35,7 @@ class Post(db.Model):
     
     
 class Category(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)    #유일키
     name = db.Column(db.String(150), unique=True)
     
     def __repr__(self):
