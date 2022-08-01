@@ -11,10 +11,18 @@ def blog_home():
 def about():
     return render_template("about.html", user=current_user)
 
+@views.route('/categories-list')
+def categories_list():
+    return render_template("categories_list.html", user=current_user)
+
+@views.route("/post-list")
+def post_list():
+    return render_template("post_list.html", user=current_user)
+
+@views.route('posts/<int:id>')
+def post_detail():
+    return render_template("post_detail.html", user=current_user)
+
 @views.route('/contact')
 def contact():
     return render_template("contact.html", user=current_user)
-
-@views.route('/category')
-def category():
-    return render_template("category.html", user=current_user)
