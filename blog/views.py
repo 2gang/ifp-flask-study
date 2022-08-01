@@ -1,7 +1,9 @@
 from sre_parse import CATEGORIES
-from flask import Blueprint, render_template
+from unicodedata import category
+from flask import Blueprint, redirect, render_template, request, redirect, url_for
 from flask_login import current_user, login_required
-from .models import get_category_model
+from .models import get_category_model, get_post_model, db
+from blog.forms import PostForm
 views = Blueprint("views", __name__)
 
 @views.route('/')
@@ -32,8 +34,20 @@ def post_detail():
 def contact():
     return render_template("contact.html", user=current_user)
 
-@views.route("/create-post")
+@views.route("/create-post", methods=['GET','POST'])
 @login_required
 def create_post():
-    categories = get_category_model().query.all()
-    return render_template("post_create_form.html", user=current_user, categories=categories)
+    form = PostForm()
+    if request.method == "POST" and form.validate_on_submit():
+        post = get_post_model()(
+            title=form.title.data,
+            content=form.content.data,
+            category_id=form.category.data,
+            author_id=current_user.id,
+        )
+        db.session.add(post)
+        db.session.commit()
+        return redirect(url_for("views.blog_home"))
+    else:
+        categories = get_category_model().query.all()
+        return render_template("post_create_form.html", user=current_user, categories=categories)
