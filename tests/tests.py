@@ -210,7 +210,7 @@ class TestPostwithCategory(unittest.TestCase):
                                                   content="만나서 반갑습니다!",
                                                   category="1"),
                                         follow_redirects=True)
-            self.assertEqual(1, get_post_model().query.count()) # 게시물을 폼에서 작성한 후, 데이터베이스에 남아 있는 게시물의 수가 1개가 맞는가?
+            self.assertEqual(1, get_post_model().query.count()) # 게시물을 폼에서 작성한 후, 데이터베이스에 남아 있는 게시물의 수가 1개인지 확인
 
         # 게시물은 잘 추가되어 있는지?
         response = self.client.get(f'/posts/1')
