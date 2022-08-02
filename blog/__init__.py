@@ -1,8 +1,16 @@
-from flask import Flask
+import click
+from flask.cli import with_appcontext
+from flask import Flask, abort
+from werkzeug.security import generate_password_hash
+from wtforms import PasswordField, StringField
+from wtforms.validators import InputRequired
+
+from flask import Flask, abort
 from .models import DB_NAME, db, get_user_model,get_post_model, get_category_model
 from flask_sqlalchemy import SQLAlchemy
 from os import path
-from flask_login import LoginManager    #flask_login = 로그인 기능을 쉽게 구현할 수 있도록 도와주는 라이브러리
+from flask_login import LoginManager, current_user
+#flask_login = 로그인 기능을 쉽게 구현할 수 있도록 도와주는 라이브러리
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 
@@ -23,10 +31,49 @@ def create_app():
                   template_mode='bootstrap3')
     
     # flask-admin에 model 추가
-    admin.add_view(ModelView(get_user_model(), db.session)) 
-    # get_user_model 로 유저 클래스를 가져옴
-    admin.add_view(ModelView(get_post_model(), db.session))
-    admin.add_view(ModelView(get_category_model(), db.session))
+    class MyUserView(ModelView):
+        def is_accessible(self):
+            if current_user.is_authenticated and current_user.is_staff == True:
+                return True
+            else:
+                return abort(403)
+
+        class CustomPasswordField(StringField):
+            def populate_obj(self, obj, name):
+                setattr(obj, name, generate_password_hash(self.data))
+
+        form_extra_fields = {
+            'password': CustomPasswordField('Password', validators=[InputRequired()])
+        }
+        form_excluded_columns = {
+            'posts', 'created_at'
+        }
+
+    class MyPostView(ModelView):
+        def is_accessible(self):
+            if current_user.is_authenticated and current_user.is_staff == True:
+                return True
+            else:
+                return abort(403)
+
+        form_excluded_columns = {
+            'created_at', 'comments'
+        }
+
+    class MyCategoryView(ModelView):
+        def is_accessible(self):
+            if current_user.is_authenticated and current_user.is_staff == True:
+                return True
+            else:
+                return abort(403)
+
+        form_excluded_columns = {
+            'category'
+        }
+
+    admin.add_view(MyUserView(get_user_model(), db.session))  # get_user_model 로 유저 클래스를 가져옴
+    admin.add_view(MyPostView(get_post_model(), db.session))
+    admin.add_view(MyCategoryView(get_category_model(), db.session))
     db.init_app(app)
     
     from .views import views
@@ -47,7 +94,7 @@ def create_app():
     @login_manager.user_loader  #사용자 정보 조회
     def load_user_by_id(id):
         return get_user_model().query.get(int(id))  #유저 id를 받아와서 그 유저의 정보를 반환
-      
+    
     return app
 
 def create_database(app):
