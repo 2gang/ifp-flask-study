@@ -11,6 +11,13 @@
                     <div class="site-heading">
                         <h1>Category : {{ current_category.name }}</h1>
                         <span class="subheading">{{ posts.count() }} 개의 포스트가 있습니다.</span>
+                        <span>
+                        {% if (user.is_authenticated) and (current_user.is_staff == True) %}
+                            <button class="btn btn-info" sytle ="padding: 5px;" id="edit-button">
+                                <a href="{{ url_for("views.create_post") }}">Create New Post</a>
+                            </button>
+                        {% endif %}
+                        </span>
                     </div>
                 </div>
             </div>
