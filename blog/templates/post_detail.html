@@ -12,7 +12,7 @@
                     <div class="post-heading">
                         <div id="title-wrapper"><h1>{{ post.title }}</h1></div>
                         <span class="meta">
-                            <div id="author-wrapper"><p>Posted by : <a href="#!">저자명이 들어갈 부분</a></p></div>
+                            <div id="author-wrapper"><p>Posted by : <a href="#!">{{post.user.username}}</a></p></div>
                             <p>created_at : {{ post.created_at }}</p>
                             </span>
                     </div>
@@ -28,7 +28,7 @@
         <div class="container px-4 px-lg-5">
             <div class="row gx-4 gx-lg-5 justify-content-center">
                 <div class="col-md-10 col-lg-8 col-xl-7">
-                    {{ post.contene }}
+                    {{ post.content }}
                 </div>
             </div>
         </div>
