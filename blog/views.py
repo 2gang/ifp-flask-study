@@ -1,5 +1,3 @@
-from sre_parse import CATEGORIES
-from unicodedata import category
 from flask import Blueprint, redirect, render_template, request, redirect, url_for
 from flask_login import current_user, login_required
 from .models import get_category_model, get_post_model, db
@@ -26,9 +24,10 @@ def categories_list():
 def post_list():
     return render_template("post_list.html", user=current_user)
 
-@views.route('posts/<int:id>')
+@views.route('/posts/<int:id>')
 def post_detail():
-    return render_template("post_detail.html", user=current_user)
+    post = get_post_model().query.filter_by(id=id).first()
+    return render_template("post_detail.html", user=current_user, post=post)
 
 @views.route('/contact')
 def contact():
@@ -50,4 +49,4 @@ def create_post():
         return redirect(url_for("views.blog_home"))
     else:
         categories = get_category_model().query.all()
-        return render_template("post_create_form.html", user=current_user, categories=categories)
+        return render_template("post_create_form.html", form=form, user=current_user, categories=categories)
