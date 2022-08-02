@@ -28,7 +28,7 @@
                 {% for category in categories %}
                     <!-- Category item-->
                     <div class="post-preview">
-                        <a href="post_detail.html">
+                        <a href="{{ url_for('views.post_list', id=category.id) }}">
                             <h2 class="post-title">{{ category.name }}</h2>
                         </a>
                     </div>
