@@ -25,7 +25,7 @@ def post_list():
     return render_template("post_list.html", user=current_user)
 
 @views.route('/posts/<int:id>')
-def post_detail():
+def post_detail(id):
     post = get_post_model().query.filter_by(id=id).first()
     return render_template("post_detail.html", user=current_user, post=post)
 
