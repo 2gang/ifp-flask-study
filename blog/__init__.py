@@ -1,5 +1,5 @@
 from flask import Flask
-from .models import DB_NAME, db, get_user_model
+from .models import DB_NAME, db, get_user_model,get_post_model, get_category_model
 from flask_sqlalchemy import SQLAlchemy
 from os import path
 from flask_login import LoginManager    #flask_login = 로그인 기능을 쉽게 구현할 수 있도록 도와주는 라이브러리
@@ -25,6 +25,8 @@ def create_app():
     # flask-admin에 model 추가
     admin.add_view(ModelView(get_user_model(), db.session)) 
     # get_user_model 로 유저 클래스를 가져옴
+    admin.add_view(ModelView(get_post_model(), db.session))
+    admin.add_view(ModelView(get_category_model(), db.session))
     db.init_app(app)
     
     from .views import views
