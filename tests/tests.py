@@ -137,7 +137,9 @@ class TestPostwithCategory(unittest.TestCase):
     '''
     1. 임의의 카테고리를 넣어본 후, 데이터베이스에 카테고리가 잘 추가되어 있는지 확인한다.
     2. 카테고리를 넣은 후, /categories-list 에 접속했을 때, 넣었던 카테고리들이 잘 추가되어 있는지 확인한다. 
-    3. 게시물을 작성할 때에, 로그인하지 않았다면 접근이 불가능해야 한다.
+    3. 게시물을 작성할 때에, 로그인하지 않았고, 스태프 권한을 가지고 있지 않다면 접근이 불가능해야 한다.
+        - 스태프 권한을 가지고 있지 않은 사용자 1명, 게시물 작성 페이지에 접근할 수 없어야 한다.
+        - 스태프 권한을 가지고 있는 사용자 1명, 게시물 작성 페이지에 접근할 수 있어야 한다.
     4. 임의의 카테고리를 넣어본 후,
         웹 페이지에서 폼으로 게시물을 추가할 때에 option 태그에 값이 잘 추가되는지,
         게시물을 추가한 후 게시물은 잘 추가되어 있는지
@@ -194,9 +196,39 @@ class TestPostwithCategory(unittest.TestCase):
                                         data=dict(email="helloworld@naver.com", username="hello",
                                                   password="dkdldpvmvl"),
                                         follow_redirects=True)
+            # 스태프 권한을 가지고 있지 않는 작성자 생성
+        response = self.client.post('/auth/sign-up',
+                                    data=dict(email="helloworld@naver.com", username="hello", password1="dkdldpvmvl",
+                                              password2="dkdldpvmvl"))
+        # 스태프 권한을 가지고 있지 않은 작성자가 포스트 작성 페이지에 접근한다면, 권한 거부가 발생해야 한다.
+        with self.client:
+            response = self.client.post('/auth/login',
+                                        data=dict(email="helloworld@naver.com", username="hello",
+                                                  password="dkdldpvmvl"),
+                                        follow_redirects=True)
+            response = self.client.get('/create-post', follow_redirects=False)
+            self.assertEqual(403,
+                             response.status_code)  # 스태프 권한을 가지고 있지 않은 사람이 /create-post 에 접근한다면, 서버는 상태 코드로 403을 반환해야 한다.
+            response = self.client.get('/auth/logout')  # 스태프 권한을 가지고 있지 않은 작성자에서 로그아웃
+
+        # 스태프 권한을 가지고 있는 작성자 생성, 폼에서는 is_staff 를 정할 수 없으므로 직접 생성해야 한다.
+        self.user_with_staff = get_user_model()(
+            email="staff@example.com",
+            username="staffuserex1",
+            password="12345",
+            is_staff=True
+        )
+        db.session.add(self.user_with_staff)
+        db.session.commit()
+
+        # 스태프 권한을 가지고 있는 유저로 로그인 후, 게시물을 잘 작성할 수 있는지 테스트
+        from flask_login import FlaskLoginClient
+        app.test_client_class = FlaskLoginClient
+        with app.test_client(user=self.user_with_staff) as user_with_staff:
             # 로그인한 상태로, 게시물 작성 페이지에 갔을 때에 폼이 잘 떠야 한다.
-            response = self.client.get('/create-post')
-            self.assertEqual(response.status_code, 200) # 서버에 get 요청을 보냈을 때에, 정상적으로 응답한다는 상태 코드인 200을 돌려주는가?
+            response = user_with_staff.get('/create-post', follow_redirects=True)
+            self.assertEqual(response.status_code,
+                             200)  # 스태프 권한을 가지고 있는 사용자가 서버에 get 요청을 보냈을 때에, 정상적으로 응답한다는 상태 코드인 200을 돌려주는가?
 
             # 미리 작성한 카테고리 3개가 셀렉트 박스의 옵션으로 잘 뜨고 있는가?
             soup = BeautifulSoup(response.data, 'html.parser')
@@ -205,12 +237,12 @@ class TestPostwithCategory(unittest.TestCase):
             self.assertIn("rust", select_tags.text)
             self.assertIn("javascript", select_tags.text)
 
-            response_post = self.client.post('/create-post',
-                                        data=dict(title="안녕하세요, 첫 번째 게시물입니다.",
-                                                  content="만나서 반갑습니다!",
-                                                  category="1"),
-                                        follow_redirects=True)
-            self.assertEqual(1, get_post_model().query.count()) # 게시물을 폼에서 작성한 후, 데이터베이스에 남아 있는 게시물의 수가 1개인지 확인
+            response_post = user_with_staff.post('/create-post',
+                                             data=dict(title="안녕하세요, 첫 번째 게시물입니다.", content="만나서 반갑습니다!", category="1"),
+                                             follow_redirects=True)
+
+
+            self.assertEqual(1, get_post_model().query.count())  # 게시물을 폼에서 작성한 후, 데이터베이스에 남아 있는 게시물의 수가 1개가 맞는가?
 
         # 게시물은 잘 추가되어 있는지?
         response = self.client.get(f'/posts/1')
@@ -222,9 +254,106 @@ class TestPostwithCategory(unittest.TestCase):
 
         # 게시물 페이지에서, 로그인했던 유저의 이름이 저자로 잘 표시되는지?
         author_wrapper = soup.find(id='author-wrapper')
-        self.assertIn("hello", author_wrapper.text)
+        self.assertIn("staffuserex1", author_wrapper.text)
 
         db.session.close()
 
+    def test_update_post(self):
+        '''
+        임의의 유저를 2명 생성한다. smith, james
+        smith 으로 로그인 후, 폼에서 게시물을 하나 생성한다.
+        smith로 로그인한 상태에서 smith가 작성한 게시물에 들어갔을 때에, "수정하기" 버튼이 보여야 한다.
+        수정하기 버튼을 누르고 수정 페이지에 들어가면, 폼에 원래 내용이 채워져 있어야 한다.
+        이후 폼에서 내용을 바꾸고 수정하기 버튼을 누르면, 수정이 잘 되어야 한다.
+        smith 에서 로그아웃 후, james 로 로그인 후 smith가 작성한 게시물에 들어갔을 때에, "수정하기" 버튼이 보이지 않아야 한다.
+        james 가 smith가 작성한 게시물을 수정하려 한다면(url로 접근하려 한다면), 거부되어야 한다.
+        '''
+
+        # 2명의 유저 생성하기
+        self.smith = get_user_model()(
+            email="smithf@example.com",
+            username="smith",
+            password="12345",
+            is_staff=True,
+        )
+        db.session.add(self.smith)
+        db.session.commit()
+        self.james = get_user_model()(
+            email="jamesf@example.com",
+            username="james",
+            password="12345",
+            is_staff=True,
+        )
+        db.session.add(self.james)
+        db.session.commit()
+
+        # 2개의 카테고리 생성하기
+        self.python_category = get_category_model()(
+            name="python" # id == 1
+        )
+        db.session.add(self.python_category)
+        db.session.commit()
+        self.javascript_category = get_category_model()(
+            name="javascript" # id == 2
+        )
+        db.session.add(self.javascript_category)
+        db.session.commit()
+
+        # smith로 로그인 후, 수정 처리가 잘 되는지 테스트
+        from flask_login import FlaskLoginClient
+        app.test_client_class = FlaskLoginClient
+        # smith 로 게시물 작성, 이 게시물의 pk는 1이 될 것임
+        with app.test_client(user=self.smith) as smith:
+            smith.post('/create-post',
+                       data=dict(title="안녕하세요,smith가 작성한 게시물입니다.",
+                                 content="만나서 반갑습니다!",
+                                 category="1"), follow_redirects=True)
+            response = smith.get('/posts/1') # smith가 본인이 작성한 게시물에 접속한다면,
+            soup = BeautifulSoup(response.data, 'html.parser')
+            edit_button = soup.find(id='edit-button')
+            self.assertIn('Edit', edit_button.text) # "Edit" 버튼이 보여야 함
+
+            response = smith.get('/edit-post/1') # smith 가 본인이 작성한 포스트에 수정하기 위해서 접속하면,
+            self.assertEqual(200, response.status_code) # 정상적으로 접속할 수 있어야 함, status_code==200이어야 함
+            soup = BeautifulSoup(response.data, 'html.parser')
+
+            title_input = soup.find('input')
+            content_input = soup.find('textarea')
+
+            # 접속한 수정 페이지에서, 원래 작성했을 때 사용했던 문구들이 그대로 출력되어야 함
+            self.assertIn(title_input.text, "안녕하세요,smith가 작성한 게시물입니다.")
+            self.assertIn(content_input.text,"만나서 반갑습니다!")
+
+            # 접속한 수정 페이지에서, 폼을 수정하여 제출
+            smith.post('/edit-post/1',
+                       data=dict(title="안녕하세요,smith가 작성한 게시물을 수정합니다.",
+                                 content="수정이 잘 처리되었으면 좋겠네요!",
+                                 category="2"), follow_redirects=True)
+            # 수정을 완료한 후, 게시물에 접속한다면 수정한 부분이 잘 적용되어 있어야 함
+            response = smith.get('/posts/1')
+            soup = BeautifulSoup(response.data, 'html.parser')
+            title_wrapper = soup.find(id='title-wrapper')
+            content_wrapper = soup.find(id='content-wrapper')
+
+            self.assertIn( "안녕하세요,smith가 작성한 게시물을 수정합니다.", title_wrapper.text)
+            self.assertIn("수정이 잘 처리되었으면 좋겠네요!", content_wrapper.text)
+
+            # 마찬가지로 smith로 접속한 상태이므로,
+            response = smith.get('/posts/1') # smith가 본인이 작성한 게시물에 접속한다면,
+            soup = BeautifulSoup(response.data, 'html.parser')
+            edit_button = soup.find(id='edit-button')
+            self.assertIn('Edit', edit_button.text) # "Edit" 버튼이 보여야 함
+            smith.get('/auth/logout') # smith 에서 로그아웃
+        # james 로 로그인
+        with app.test_client(user=self.james) as james:
+            response = james.get('/posts/1') # Read 를 위한 접속은 잘 되어야 하고,
+            self.assertEqual(response.status_code, 200)
+            soup = BeautifulSoup(response.data, 'html.parser')
+            self.assertNotIn('Edit', soup.text) # Edit 버튼이 보이지 않아야 함
+            response = james.get('/edit-post/1') # Update 를 위한 접속은 거부되어야 함
+            self.assertEqual(response.status_code, 403)
+            
+        db.session.close()    
+        
 if __name__ == "__main__":
     unittest.main()
