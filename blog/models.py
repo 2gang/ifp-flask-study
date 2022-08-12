@@ -33,10 +33,11 @@ class Post(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('category.id', ondelete='CASCADE'),
                          nullable=False) #외래 키, category 테이블의 id를 참조, category.id가 삭제되면 같이 삭제됨  
     category = db.relationship('Category', backref=db.backref('category',cascade='delete'))
-    # comments = db.relationship("Comment", backref="post", passive_deletes=True)
+    comments = db.relationship("Comment", backref=db.backref('comment', cascade='delete'), passive_deletes=True)
     
     def __repr__(self):
         return f'<{self.__class__.__name__}(title={self.title})>'
+    
 def get_post_model():
     return Post 
     
@@ -49,3 +50,20 @@ class Category(db.Model):
 
 def get_category_model():
     return Category
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)  # id : 유일 키, Integer
+    content = db.Column(db.Text(), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=func.now())  # 생성일자, 기본적으로 현재가 저장되도록 함
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'),
+                          nullable=False)  # 외래 키, user 테이블의 id를 참조할 것이다!
+    user = db.relationship('User', backref=db.backref('users', cascade='delete'))
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id', ondelete='CASCADE'),
+                            nullable=False)  # 외래 키, post 테이블의 id를 참조할 것이다!
+    post = db.relationship('Post', backref=db.backref('comments', cascade='delete'))
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__}(title={self.content})>'
+
+def get_comment_model():
+    return Comment
