@@ -1,8 +1,8 @@
 from unicodedata import category
 from flask import Blueprint, redirect, render_template, request, redirect, url_for, abort
 from flask_login import current_user, login_required
-from .models import get_category_model, get_post_model, db
-from blog.forms import PostForm
+from .models import get_category_model, get_post_model, db, get_comment_model
+from blog.forms import PostForm, CommentForm
 views = Blueprint("views", __name__)
 
 @views.route('/')
@@ -30,7 +30,9 @@ def post_list(id):
 
 @views.route('/posts/<int:id>')
 def post_detail(id):
+    comment_form = CommentForm()
     post = get_post_model().query.filter_by(id=id).first()
+    comments = get_post_model().query.filter_by(id=id).first().comments # id에 맞는 포스트 모델을 가져와서, 해당 게시물에 달린 모든 댓글들을 가져옴
     return render_template("post_detail.html", user=current_user, post=post)
 
 @views.route('/contact')
