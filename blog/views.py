@@ -33,7 +33,7 @@ def post_detail(id):
     comment_form = CommentForm()
     post = get_post_model().query.filter_by(id=id).first()
     comments = get_post_model().query.filter_by(id=id).first().comments # id에 맞는 포스트 모델을 가져와서, 해당 게시물에 달린 모든 댓글들을 가져옴
-    return render_template("post_detail.html", user=current_user, post=post)
+    return render_template("post_detail.html", user=current_user, post=post, comments=comments, form=comment_form)
 
 @views.route('/contact')
 def contact():
@@ -80,3 +80,32 @@ def edit_post(id):
     # 스태프 권한을 가지고 있지 않거나, 게시물의 작성자가 아닐 경우 403 error를 발생시킨다.
     else:
         abort(403)
+        
+@login_required
+@views.route("/create-comment/<int:id>", methods=['POST'])
+def create_comment(id):
+    form = CommentForm()
+    if request.method == "POST" and form.validate_on_submit():
+        comment = get_comment_model()(
+            content=form.content.data,
+            author_id=current_user.id,
+            post_id=id
+        )
+        db.session.add(comment)
+        db.session.commit()
+        return redirect(url_for("views.post_detail", id=id))
+    
+@login_required
+@views.route("/edit-comment/<int:post_id>/<int:comment_id>", methods=["POST"])
+def edit_comment(post_id, comment_id):
+    comment = get_comment_model().query.filter_by(id=comment_id).first() # 수정할 댓글을 특정해야 한다.
+    form = CommentForm() # Form으로 데이터를 받아온다.
+    if current_user.username == comment.user.username:
+        if form.validate_on_submit():
+            comment.content = form.content.data
+            db.session.commit()
+            return redirect(url_for("views.post_detail", id=post_id))
+        else:
+            print("validation failed!")
+    else:
+        return abort(403)
