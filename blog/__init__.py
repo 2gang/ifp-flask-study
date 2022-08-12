@@ -4,6 +4,7 @@ from flask import Flask, abort
 from werkzeug.security import generate_password_hash
 from wtforms import PasswordField, StringField
 from wtforms.validators import InputRequired
+from sqlalchemy.exc import IntegrityError
 
 from flask import Flask, abort
 from .models import DB_NAME, db, get_user_model,get_post_model, get_category_model
@@ -95,6 +96,33 @@ def create_app():
     def load_user_by_id(id):
         return get_user_model().query.get(int(id))  #유저 id를 받아와서 그 유저의 정보를 반환
     
+    # Custom Command Line
+    import click
+    from flask.cli import with_appcontext
+    @click.command(name="create_superuser")
+    @with_appcontext
+    def create_superuser():
+
+        # 정보 입력받기
+        username = input("Enter username : ")
+        email = input("Enter email : ")
+        password = input("Enter password : ")
+        is_staff = True
+
+        try:
+            superuser = get_user_model()(
+                username = username,
+                email = email,
+                password = generate_password_hash(password),
+                is_staff = is_staff
+            )
+            db.session.add(superuser)
+            db.session.commit()
+        except IntegrityError:
+            print('\033[31m' + "Error : username or email already exists.")
+        print(f"User created! : {email}")
+
+    app.cli.add_command(create_superuser)
     return app
 
 def create_database(app):
