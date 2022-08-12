@@ -381,7 +381,7 @@ class TestComment(unittest.TestCase):
 
         # 2명의 유저 생성하기
         self.james = get_user_model()(
-            email="jamesf@example.com",
+            email="james@example.com",
             username="james",
             password="12345",
             is_staff=False,
@@ -433,6 +433,28 @@ class TestComment(unittest.TestCase):
             self.assertNotIn("Edit comment", comment_wrapper.text) # 작성자로 로그인되어 있지 않을 경우 수정 버튼이 보이지 않는가?   
             
         db.session.close()
+    
+    def test_update_comment(self):
+        '''
+        임의의 유저로 댓글을 작성하고,
+        띄워진 모달 창에서 수정 작업을 거친 후 수정 버튼을 누르면 예전의 댓글 내용이 수정한 내용으로 잘 바뀌어 있어야 한다.
+        '''
+        app.test_client_class = FlaskLoginClient
+        with app.test_client(user=self.james) as james:
+            response = james.post('/create-comment/1', data=dict(content="만나서 반갑습니다!")) # james 로 댓글을 하나 작성한 다음,
+            self.assertEqual(response.status_code, 302) # 작성이 된 후 정상적으로 리디렉션되어야 한다.
+            response = james.post('/edit-comment/1/1', data=dict(content="댓글 내용을 수정합니다!")) # 댓글을 수정해 주고,
+            self.assertEqual(302, response.status_code)  # 수정이 완료된 후 정상적으로 리디렉션되어야 한다.
+            response = james.get('/posts/1')
+            soup = BeautifulSoup(response.data, 'html.parser')
+            comment_wrapper = soup.find(id='comment-wrapper')
+            self.assertNotIn("만나서 반갑습니다!", comment_wrapper.text) # 기존의 댓글 내용은 있으면 안 되고
+            self.assertIn("댓글 내용을 수정합니다!", comment_wrapper.text) # 수정한 댓글의 내용이 표시되어야 한다.
+            james.get('/auth/logout') # james에서 로그아웃
+        
+        db.session.close()
+        
+        
           
 if __name__ == "__main__":
     unittest.main()
