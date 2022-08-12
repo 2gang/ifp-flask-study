@@ -1,14 +1,14 @@
 import unittest
 from os import path
 
-from flask_login import current_user
+from flask_login import current_user, login_user, FlaskLoginClient
 from bs4 import BeautifulSoup # pip install BeautifulSoup4
 
 from blog import create_app
 from blog import db
 import os
 
-from blog.models import get_user_model, get_post_model, get_category_model
+from blog.models import get_user_model, get_post_model, get_category_model, get_comment_model
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = create_app()
@@ -354,6 +354,85 @@ class TestPostwithCategory(unittest.TestCase):
             self.assertEqual(response.status_code, 403)
             
         db.session.close()    
-        
+
+class TestComment(unittest.TestCase):
+    '''
+    댓글은 폼에서의 POST 요청을 보냄으로서 이루어집니다.
+    "comment" 버튼을 누르면, 폼에 있는 내용이 서버로 전송되고, 그를 받아서 데이터베이스에 저장해야 합니다.
+    댓글을 저장하고 나면 댓글을 작성한 해당 게시물로 자동 이동해야 합니다.
+    댓글을 저장하고 나면 댓글이 해당 게시물에 잘 달려 있는 것을 확인해야 합니다.
+    댓글을 저장하고 나면 작성자가 제대로 표시되어야 합니다.
+    로그인을 한 사람만 댓글을 수정할 수 있습니다.
+    '''
+
+    # 테스트를 위한 사전 준비
+    def setUp(self):
+        self.ctx = app.app_context()
+        self.ctx.push()
+        self.client = app.test_client()
+        # 테스트를 위한 db 설정
+        self.db_uri = 'sqlite:///' + os.path.join(basedir, 'test.db')
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = self.db_uri
+        if not path.exists("tests/" + "test_db"):  # DB 경로가 존재하지 않는다면,
+            db.create_all(app=app)  # DB를 하나 만들어낸다.
+
+        # 2명의 유저 생성하기
+        self.james = get_user_model()(
+            email="jamesf@example.com",
+            username="james",
+            password="12345",
+            is_staff=False,
+        )
+        db.session.add(self.james)
+        db.session.commit()
+        self.nakamura = get_user_model()(
+            email="nk222f@example.com",
+            username="nakamura",
+            password="12345",
+            is_staff=False,
+        )
+        db.session.add(self.nakamura)
+        db.session.commit()
+
+        # 댓글을 작성할 게시물 하나 생성하기
+        self.example_post = get_post_model()(
+            title="댓글 작성을 위한 게시물을 추가합니다.",
+            content="부디 테스트가 잘 통과하길 바랍니다.",
+            category_id="1",
+            author_id=1 # 작성자는 james
+        )
+        db.session.add(self.example_post)
+        db.session.commit()
+        self.assertEqual(get_post_model().query.count(), 1)
+
+    # 테스트가 끝나고 나서 수행할 것, 테스트를 위한 데이터베이스의 내용들을 모두 삭제한다.
+    def tearDown(self):
+        os.remove('tests/test.db')
+        self.ctx.pop()
+
+    def test_add_comment(self):
+        app.test_client_class = FlaskLoginClient
+        with app.test_client(user=self.james) as james:
+            response = james.post('/create-comment/1', data=dict(content="만나서 반갑습니다!"))
+            self.assertEqual(302, response.status_code) # 댓글을 작성하면 해당 페이지로 자동 리디렉션되어야 한다.
+            self.assertEqual(get_comment_model().query.count(), 1) # 작성한 댓글이 데이터베이스에 잘 추가되어 있는가?
+            response = james.get('/posts/1')
+            soup = BeautifulSoup(response.data, 'html.parser')
+            comment_wrapper = soup.find(id="comment-wrapper")
+            self.assertIn("만나서 반갑습니다!", comment_wrapper.text) # 작성한 댓글의 내용이 게시물의 상세 페이지에 잘 표시되는가?
+            self.assertIn("james", comment_wrapper.text) # 작성자의 이름이 잘 표시되는가?
+            self.assertIn("Edit comment", comment_wrapper.text) # 작성자로 로그인되어 있을 경우 수정 버튼이 잘 표시되는가?
+            james.get('/auth/logout') # james에서 로그아웃
+        with app.test_client(user=self.nakamura) as nakamura:
+            response = james.get('/posts/1')
+            soup = BeautifulSoup(response.data, 'html.parser')
+            comment_wrapper = soup.find(id="comment-wrapper")
+            self.assertNotIn("Edit comment", comment_wrapper.text) # 작성자로 로그인되어 있지 않을 경우 수정 버튼이 보이지 않는가?   
+            
+        db.session.close()
+          
 if __name__ == "__main__":
     unittest.main()
