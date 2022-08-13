@@ -11,6 +11,10 @@ def blog_home():
     post_list = Post.query.order_by(Post.created_at.desc())
     return render_template("index.html", user=current_user, post_list=post_list)
 
+@views.route('/admin')
+def admin():
+    return render_template("admin.html")
+
 @views.route('/about')
 def about():
     return render_template("about.html", user=current_user)
