@@ -30,7 +30,5 @@ class CommentForm(FlaskForm):
     content = TextAreaField('content', validators=[DataRequired()])
     
 class ContactMessageForm(FlaskForm):
-    name = StringField('name', validators=[DataRequired()])
-    email = EmailField('email', validators=[DataRequired(), Email()])
     phone = StringField('phone', validators=[DataRequired()])
     message = TextAreaField('message', validators=[DataRequired()])
