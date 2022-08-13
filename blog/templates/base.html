@@ -32,8 +32,14 @@
                         <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{{url_for("views.create_post")}}">Create Post</a></li>
                         <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{{url_for("views.contact")}}">Contact</a></li>
                     {% if user.is_authenticated %}
-                        <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" style="color : #E0FFFF" href="">Welcome! {{ user.username }}</a></li>
-                        <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" style="color : #E0FFFF" href="{{url_for("auth.logout")}}">Logout</a></li>
+                        {% if current_user.is_staff == True %}
+                            <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{{url_for("views.admin")}}">Admin</a></li>
+                            <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" style="color : #E0FFFF" href="">Welcome! {{ user.username }}</a></li>
+                            <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" style="color : #E0FFFF" href="{{url_for("auth.logout")}}">Logout</a></li>
+                        {% else %}
+                            <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" style="color : #E0FFFF" href="">Welcome! {{ user.username }}</a></li>
+                            <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" style="color : #E0FFFF" href="{{url_for("auth.logout")}}">Logout</a></li>
+                        {% endif %}
                     {% else %}
                         <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" style="color : #E0FFFF" href="{{url_for("auth.signup")}}">Sign Up</a></li>
                         <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" style="color : #E0FFFF" href="{{url_for("auth.login")}}">Login</a></li>
