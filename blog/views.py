@@ -1,14 +1,15 @@
 from unicodedata import category
 from flask import Blueprint, redirect, render_template, request, redirect, url_for, abort, flash
 from flask_login import current_user, login_required
-from .models import get_category_model, get_post_model, db, get_comment_model, get_contact_message_model
+from .models import get_category_model, get_post_model, db, get_comment_model, get_contact_message_model, Post
 from blog.forms import PostForm, CommentForm, ContactMessageForm
 views = Blueprint("views", __name__)
 
 @views.route('/')
 @views.route('/home')
 def blog_home():
-    return render_template("index.html", user=current_user)
+    post_list = Post.query.order_by(Post.created_at.desc())
+    return render_template("index.html", user=current_user, post_list=post_list)
 
 @views.route('/about')
 def about():
