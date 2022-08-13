@@ -1,8 +1,8 @@
 from unicodedata import category
-from flask import Blueprint, redirect, render_template, request, redirect, url_for, abort
+from flask import Blueprint, redirect, render_template, request, redirect, url_for, abort, flash
 from flask_login import current_user, login_required
-from .models import get_category_model, get_post_model, db, get_comment_model
-from blog.forms import PostForm, CommentForm
+from .models import get_category_model, get_post_model, db, get_comment_model, get_contact_message_model
+from blog.forms import PostForm, CommentForm, ContactMessageForm
 views = Blueprint("views", __name__)
 
 @views.route('/')
@@ -34,10 +34,6 @@ def post_detail(id):
     post = get_post_model().query.filter_by(id=id).first()
     comments = get_post_model().query.filter_by(id=id).first().comments # id에 맞는 포스트 모델을 가져와서, 해당 게시물에 달린 모든 댓글들을 가져옴
     return render_template("post_detail.html", user=current_user, post=post, comments=comments, form=comment_form)
-
-@views.route('/contact')
-def contact():
-    return render_template("contact.html", user=current_user)
 
 @views.route("/create-post", methods=['GET','POST'])
 @login_required
@@ -109,3 +105,45 @@ def edit_comment(post_id, comment_id):
             print("validation failed!")
     else:
         return abort(403)
+    
+    
+@login_required
+@views.route("/delete-post/<int:id>")
+def delete_post(id):
+    post=get_post_model().query.filter_by(id=id).first()    #삭제할 게시물을 특정
+    if current_user.username == post.user.username:
+        db.session.delete(post)
+        db.session.commit()
+        return redirect(url_for("views.categories_list", id=id))
+    else:   #그렇지 않은 유저가 시도할 경우 에러 발생
+        return abort(403)
+    
+@login_required
+@views.route("/contact", methods=["GET", "POST"])
+def contact():
+    form = ContactMessageForm()
+    # GET 요청을 받으면 폼을 띄워줘야 하고,
+    if current_user.is_authenticated and request.method=="GET":
+        return render_template("contact.html", user=current_user, form=form)
+    elif not current_user.is_authenticated and request.method=="GET":
+        flash("Login required!!!", category='error')
+        return redirect(url_for("views.blog_home"))
+    # POST 요청을 받으면 폼으로부터 얻어온 데이터를 처리하는 역할을 수행해야 한다.
+    elif current_user.is_authenticated and request.method=="POST":
+        '''
+        폼에서 얻어온 데이터를 데이터베이스에 저장
+        폼에서 얻어온 데이터를 이메일로 발송
+        '''
+        if form.validate_on_submit():
+            author_id = current_user.id
+            phone = form.phone.data
+            message = form.message.data
+            contact_message = get_contact_message_model()(
+                author_id = author_id,
+                phone = phone,
+                message = message
+            )
+            db.session.add(contact_message)
+            db.session.commit()
+            flash("Form submitted!")
+            return redirect(url_for("views.blog_home"))
