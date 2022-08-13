@@ -7,7 +7,7 @@ from wtforms.validators import InputRequired
 from sqlalchemy.exc import IntegrityError
 
 from flask import Flask, abort
-from .models import DB_NAME, db, get_user_model,get_post_model, get_category_model
+from .models import DB_NAME, db, get_contact_message_model, get_user_model,get_post_model, get_category_model
 from flask_sqlalchemy import SQLAlchemy
 from os import path
 from flask_login import LoginManager, current_user
@@ -71,10 +71,18 @@ def create_app():
         form_excluded_columns = {
             'category'
         }
+    
+    class MyContactMessageView(ModelView):
+        def is_accessible(self):
+            if current_user.is_authenticated and current_user.is_staff == True:
+               return True
+            else:
+                return abort(403) 
 
     admin.add_view(MyUserView(get_user_model(), db.session))  # get_user_model 로 유저 클래스를 가져옴
     admin.add_view(MyPostView(get_post_model(), db.session))
     admin.add_view(MyCategoryView(get_category_model(), db.session))
+    admin.add_view(MyContactMessageView(get_contact_message_model(), db.session))
     db.init_app(app)
     
     from .views import views
@@ -123,6 +131,7 @@ def create_app():
         print(f"User created! : {email}")
 
     app.cli.add_command(create_superuser)
+    
     return app
 
 def create_database(app):
