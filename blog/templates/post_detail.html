@@ -15,8 +15,16 @@
                             <div id="author-wrapper"><p>Posted by : <a href="#!">{{post.user.username}}</a></p></div>
                             <p>created_at : {{ post.created_at }}</p>
                             {% if post.user.username == current_user.username %}
+                            <!-- 게시물 생성 버튼 -->
                             <button class="btn btn-info" id="edit-button">
                                 <a href="{{ url_for("views.edit_post", id=post.id) }}">Edit</a>
+                            <!-- 게시물 수정 버튼 -->
+                            <button class="btn btn-info" style="padding: 5px; margin: 10px;" id="edit-button">
+                                <a href="{{ url_for("views.edit_post", id=post.id) }}">Edit</a>
+                            </button>
+                            <!-- 게시물 삭제 버튼 -->
+                            <button class="btn btn-danger" style="padding: 5px; margin: 10px;" id="edit-button">
+                            <a href="{{ url_for("views.delete_post", id=post.id) }}">Delete</a>
                             </button>
                             {% endif %}
                             </span>
