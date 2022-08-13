@@ -81,3 +81,15 @@ class Comment(db.Model):
 
 def get_comment_model():
     return Comment
+
+class ContactMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'),
+                          nullable=False)
+    user = db.relationship('User')
+    created_at = db.Column(db.DateTime(timezone=True), default=func.now())
+    phone = db.Column(db.String(12), nullable=False)
+    message = db.Column(db.String(500), nullable=False)
+
+def get_contact_message_model():
+    return ContactMessage
