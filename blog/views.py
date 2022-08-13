@@ -117,6 +117,17 @@ def delete_post(id):
         return redirect(url_for("views.categories_list", id=id))
     else:   #그렇지 않은 유저가 시도할 경우 에러 발생
         return abort(403)
+
+@login_required
+@views.route("/delete-comment/<int:id>")
+def delete_comment(id):
+    comment=get_comment_model().query.filter_by(id=id).first()    #삭제할 댓글을 특정
+    if current_user.username == comment.user.username:
+        db.session.delete(comment)
+        db.session.commit()
+        return redirect(url_for("views.categories_list", id=id))
+    else:   #그렇지 않은 유저가 시도할 경우 에러 발생
+        return abort(403)
     
 @login_required
 @views.route("/contact", methods=["GET", "POST"])
