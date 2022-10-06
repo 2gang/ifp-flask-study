@@ -19,7 +19,7 @@ class UserModel(db.Model):
   updated_at = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
   
   followed = db.relationship(
-    'User',
+    'UserModel',
     secondary=followers,
     primaryjoin=(followers.c.follower_id==id),
     secondaryjoin=(followers.c.followed_id==id),
@@ -56,3 +56,6 @@ class UserModel(db.Model):
   def delete_from_db(self):
     db.session.delete(self)
     db.session.commit()
+    
+    def __repr__(self):
+      return f'<User Object : {self.uesrname}>'
