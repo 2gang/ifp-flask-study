@@ -16,10 +16,11 @@ class PostSchema(ma.SQLAlchemyAutoSchema):
         dump_only = [
             "author_name",
         ]
-        #쓰기 전용 필드들을 정의
-        load_only = [
-            "author_id",
-        ]
+        # #쓰기 전용 필드들을 정의
+        # load_only = [
+        #     "author_id",
+        # ]
+        exclude = ("author_id",)
         include_fk = True       #외래 키 포함 여부
         load_instance = True    #모델 객체를 로드할지에 대한 여부
         ordered = True
