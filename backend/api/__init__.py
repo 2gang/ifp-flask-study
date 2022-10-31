@@ -1,3 +1,4 @@
+from datetime import timedelta
 from flask import Flask, jsonify
 from flask_restful import Api
 from dotenv import load_dotenv
@@ -13,7 +14,7 @@ from .db import db
 from .ma import ma
 from api.models import user, post, comment
 from .resources.post import PostList, Post
-from .resources.user import UserRegister
+from .resources.user import UserRegister, UserLogin, RefreshToken
 
 def create_app():
     app = Flask(__name__)
@@ -22,6 +23,9 @@ def create_app():
     app.config.from_object("config.dev")
     app.config.from_envvar("APPLICATION_SETTINGS")
     app.config.update(RESTFUL_JSON=dict(ensure_ascii=False))
+    app.config["JSON_AS_ASCII"] = False
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
+    app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
     api = Api(app)
     
     # 추가!
@@ -41,9 +45,44 @@ def create_app():
     @app.errorhandler(ValidationError)
     def handle_marshmallow_validation(err):
         return jsonify(err.messages), 400
+    
+    @jwt.expired_token_loader
+    def expired_token_callback(jwt_header, jwt_payload):
+        """
+        토큰이 만료되었을 때의 에러 메시지를 지정합니다.
+        """
+        return (
+            jsonify({"Error": "토큰이 만료되었습니다."}),
+            401,
+        )
+
+    @jwt.invalid_token_loader
+    def invalid_token_callback(error):
+        """
+        토큰이 잘못된 값일 때의 에러 메시지를 지정합니다.
+        """
+        return (
+            jsonify({"Error": "잘못된 토큰입니다."}),
+            401,
+        )
+
+    @jwt.unauthorized_loader
+    def missing_token_callback(error):
+        """ """
+        return (
+            jsonify(
+                {
+                    "Error": "토큰 정보가 필요합니다.",
+                }
+            ),
+            401,
+        )
 
     api.add_resource(PostList, "/posts/")
     api.add_resource(Post, "/posts/<int:id>")
     api.add_resource(UserRegister, "/register/")
+    api.add_resource(UserLogin, "/login/")
+    api.add_resource(RefreshToken, "/refresh/")
+    
     
     return app
