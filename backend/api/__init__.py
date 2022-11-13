@@ -3,6 +3,7 @@ from flask import Flask, jsonify
 from flask_restful import Api
 from dotenv import load_dotenv
 from flask_cors import CORS
+from flask_uploads import configure_uploads
 
 
 from flask_jwt_extended import JWTManager
@@ -15,6 +16,8 @@ from .ma import ma
 from api.models import user, post, comment
 from .resources.post import PostList, Post
 from .resources.user import UserRegister, UserLogin, RefreshToken
+from .resources.image import PostImageUpload, ProfileImageUpload, Image
+from .utils.image_upload import IMAGE_SET
 
 def create_app():
     app = Flask(__name__)
@@ -26,6 +29,9 @@ def create_app():
     app.config["JSON_AS_ASCII"] = False
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
+    
+    configure_uploads(app, IMAGE_SET)
+    
     api = Api(app)
     
     # 추가!
@@ -83,6 +89,9 @@ def create_app():
     api.add_resource(UserRegister, "/register/")
     api.add_resource(UserLogin, "/login/")
     api.add_resource(RefreshToken, "/refresh/")
+    api.add_resource(PostImageUpload, "/upload/post/image/")
+    api.add_resource(ProfileImageUpload, "/upload/profile/image/")
+    api.add_resource(Image, "/statics/<path:path>")
     
     
     return app
