@@ -16,15 +16,6 @@ const imageRetrieveBseUrl = 'http://127.0.0.1:5000/statics/';
   }
 }
 
-/**
- * post Div 전체를 복사합니다.
- */
- function copyDiv() {
-  const postDiv = document.querySelector(".post");
-  const newNode = postDiv.cloneNode(true);
-  newNode.id = "copied-post";
-  postDiv.after(newNode);
-}
 
 
 
@@ -74,23 +65,16 @@ const imageRetrieveBseUrl = 'http://127.0.0.1:5000/statics/';
   const postDiv = document.querySelector(".post");
   const newNode = postDiv.cloneNode(true);
   newNode.id = "copied-post";
+  newNode.style = "display=inline";
   return newNode;
 }
 
-// const postDiv = document.querySelector(".post-wrapper");
-// postDiv.append(
-//   getCompletedPost(
-//     (titleValue="제목"),
-//     (contentValue="내용"),
-//     (authorNameValue="작성자명"),
-//     (feedImgValue = "")
-//   )
-// );
 
 /**
  * 제목, 내용, 저자, 사진을 받아 해당 div를 하나의 게시물로 완성합니다.
  */
  function getCompletedPost(
+  idValue,
   titleValue,
   contentValue,
   authorNameValue,
@@ -105,6 +89,7 @@ const imageRetrieveBseUrl = 'http://127.0.0.1:5000/statics/';
   let content = div.children[2].children[5];
   let postTime = div.children[2].children[6];
 
+  div.id = idValue;
   title.innerText = titleValue;
   content.innerText = contentValue;
   authorUpName.innerText = authorNameValue;
@@ -123,14 +108,15 @@ const imageRetrieveBseUrl = 'http://127.0.0.1:5000/statics/';
   getPostListDatafromAPI(page).then((result) => {
     const postDiv = document.querySelector(".post-wrapper");
     for (let i = 0; i < result.length; i++) {
+      const id = result[i]["id"];
       const title = result[i]["title"];
-      console.log(i);
       const content = result[i]["content"];
       const author = result[i]["author_name"];
       const image = imageRetrieveBseUrl + result[i]["image"];
 
       postDiv.append(
         getCompletedPost(
+          (idValue = id),
           (titleValue = title),
           (contentValue = content),
           (authorNameValue = author),
@@ -144,7 +130,7 @@ const imageRetrieveBseUrl = 'http://127.0.0.1:5000/statics/';
 
 
 function executeInfiniteScroll() {
-  let pageCount = 2;
+  let pageCount = 1;
   var intersectionObserver = new IntersectionObserver(function (entries) {
     if(entries[0].intersectionRatio <= 0) {
       return;
@@ -158,7 +144,6 @@ intersectionObserver.observe(document.querySelector(".bottom"));
 }
 
 function main() {
-  loadPosts(1);
   executeInfiniteScroll();
 }
 
