@@ -94,7 +94,7 @@
     var myHeaders = new Headers();
     myHeaders.append(
       "Authorization",
-      "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNjY4MzMwMDI1LCJqdGkiOiIyMDFiMzEyMy01ZDZkLTRlMzQtYTAyMy05OTAzZGI3ZjgzZTUiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoiXHVjMGFjXHViYWE4IiwibmJmIjoxNjY4MzMwMDI1LCJleHAiOjE2Njg0MTY0MjV9.JK9fnuhrMYdocvj6wexiWZozBIl8TlOFQsgtL0za2LU" // 토큰을 이곳에다 붙여넣으세요.
+      "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNjY4NzQ5NTA4LCJqdGkiOiI5ZjU0ZWM3Mi0zZGI1LTRkZDQtOTdlYS0zMDhmNjM3NmYwMmQiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoiXHVjMGFjXHViYWE4IiwibmJmIjoxNjY4NzQ5NTA4LCJleHAiOjE2Njg4MzU5MDh9.AZLM5H-RsemfYA7eObTH-Ev5OreryuZjt6R0PTZUii8" // 토큰을 이곳에다 붙여넣으세요.
     );
     myHeaders.append("Content-Type", "application/json");
   
