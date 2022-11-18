@@ -26,10 +26,6 @@ def create_app():
     load_dotenv(".env", verbose=True)
     app.config.from_object("config.dev")
     app.config.from_envvar("APPLICATION_SETTINGS")
-    app.config.update(RESTFUL_JSON=dict(ensure_ascii=False))
-    app.config["JSON_AS_ASCII"] = False
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
-    app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
     
     configure_uploads(app, IMAGE_SET)
     
