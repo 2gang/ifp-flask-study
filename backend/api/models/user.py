@@ -62,6 +62,11 @@ class UserModel(db.Model):
     db.session.delete(self)
     db.session.commit()
     
+  def update_to_db(self, data):
+    for key, value in data.items():
+      setattr(self, key, value)
+    db.session.commit()
+    
     def __repr__(self):
       return f'<User Object : {self.uesrname}>'
     

@@ -2,7 +2,7 @@ from os import access
 from api.models.user import UserModel
 from flask_restful import Resource, request
 from werkzeug.security import generate_password_hash
-from api.schemas.user import UserRegisterSchema
+from api.schemas.user import UserRegisterSchema, UserSchema
 from flask_jwt_extended import create_access_token,create_refresh_token,get_jwt_identity, get_jwt, jwt_required
 from flask.views import MethodView
 from werkzeug.security import check_password_hash
@@ -10,7 +10,7 @@ from werkzeug.security import check_password_hash
 from api.models.user import RefreshTokenModel
 
 register_schema = UserRegisterSchema()
-
+user_schema = UserSchema()
 
 class UserRegister(Resource):
     """
@@ -51,9 +51,16 @@ class UserLogin(MethodView):
         data = request.get_json()
         user = UserModel.find_by_email(data["email"])
         
+        additional_claims = {"user_id": user.id}
+        
         if user and check_password_hash(user.password, data["password"]):
-            access_token = create_access_token(identity=user.username, fresh=True)
-            refresh_token = create_refresh_token(identity=user.username)
+            access_token = create_access_token(
+                identity=user.username, 
+                fresh=True,
+                additional_claims=additional_claims,
+            )
+            refresh_token = create_refresh_token(
+                identity=user.username, additional_claims=additional_claims)
             
             if user.token:
                 token = user.token[0]
@@ -87,13 +94,54 @@ class RefreshToken(MethodView):
         if not user:
             return {"Unauthorized": "Refresh Token은 2회 이상 사용될 수 없습니다."}, 401
         # access token, refresh token 발급
-        access_token = create_access_token(fresh=True, identity=identity)
-        refresh_token = create_refresh_token(identity=user.username)
+        additional_claims = {"user_id": user.id}
+        access_token = create_access_token(
+            fresh=True,
+            identity=identity,
+            additional_claims=additional_claims,
+        )
+        refresh_token = create_refresh_token(
+            identity=user.username, additional_claims=additional_claims)
         if user:
             token = user.token[0]
             token.refresh_token_value = refresh_token
             token.save_to_db()
             return {"access_token": access_token, "refresh_token": refresh_token}, 200
     
+
+class MyPage(Resource):
+    """
+    마이페이지를 처리합니다.
+    내 프로필 페이지는 나만 접근할 수 있어야 합니다.
+    """
+    @classmethod
+    @jwt_required()
+    def get(cls, id):
+        username = get_jwt_identity()
+        user = UserModel.find_by_username(username=username)
+        if not user:
+            return {"Error" : "사용자를 찾을 수 없습니다."}, 404
+        if id == user.id:
+            return user_schema.dump(user), 200
+        return {"Error" : "잘못된 접근입니다."}, 403
+
+    
+    @classmethod
+    @jwt_required()
+    def put(cls, id):
+        user_json = request.get_json()
+        validate_result = user_schema.validate(user_json)
+        if validate_result:
+            return validate_result, 400
+        user = UserModel.find_by_username(get_jwt_identity())
+        
+        if not user:
+            return {"Error" : "사용자를 찾을 수 없습니다."}, 404
+        request_user = UserModel.find_by_username(get_jwt_identity())
+        if id == request_user.id:
+            user.update_to_db(user_json)
+            return user_schema.dump(user)
+        else:
+            return {"Error" : "잘못된 접근입니다."}, 403
     
     
