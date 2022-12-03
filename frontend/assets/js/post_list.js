@@ -2,6 +2,8 @@
 const postListBseUrl = "http://127.0.0.1:5000/posts/";
 const imageRetrieveBseUrl = "http://127.0.0.1:5000/statics/";
 const refreshTokenBseUrl = "http://127.0.0.1:5000/refresh/";
+const profileRetrieveUrl = "http://127.0.0.1:5000/mypage/";
+
 // localStorage 로부터 토큰을 가져옵니다.
 let ACCESS_TOKEN = localStorage.getItem("access_token");
 let REFRESH_TOKEN = localStorage.getItem("refresh_token");
@@ -177,7 +179,7 @@ function executeInfiniteScroll() {
  * jwt를 받아 BASE64URL 디코딩 합니다.
  */
 function decodeJWT(token) {
-  var base64url = toke.split(".")[1];
+  var base64url = token.split(".")[1];
   var base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
   var jsonPayload = decodeURIComponent(
     window
@@ -195,9 +197,9 @@ function decodeJWT(token) {
  * jwt에서 얻은 유저의 id로 프로필 사진을 얻어옵니다.
  */
 async function getProfileImagebyId(id) {
-  url = profileRetrieveUrl + '${id}/';
+  url = profileRetrieveUrl + `${id}` ;
   let myHeaders = new Headers();
-  myHeaders.append("Authorization", 'Bearer ${ACCESS_TOKEN}');
+  myHeaders.append("Authorization", `Bearer ${ACCESS_TOKEN}`);
   myHeaders.append("Content-Type", "application/json");
 
   let requestOptions = {
@@ -206,6 +208,7 @@ async function getProfileImagebyId(id) {
   };
 
   const profileResponse = await (await fetch(url, requestOptions)).json();
+  console.log(profileResponse);
   return profileResponse["image"];
 }
 
