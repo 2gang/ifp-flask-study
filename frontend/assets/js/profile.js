@@ -15,7 +15,7 @@
     if (result.status == 201) {
       alert(response["message"]);
       const path = response["path"];
-      const imageInput = document.querySelector("#image");
+      const imageInput = document.querySelector(".image");
       imageInput.setAttribute("value", path);
     } else {
       alert(JSON.stringify(response));
@@ -41,18 +41,28 @@
    */
   async function submitImage() {
     // 이미지 파일을 서버에 전송하기 위해 form 생성
-    const fileInput = document.querySelector("#imagefile");
+    const fileInput = document.querySelector(".imagefile");
     const formData = new FormData();
+  
+    // header 설정
+    var myHeaders = new Headers();
+    myHeaders.append(
+      "Authorization",
+      "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNjcwMDcwNzYyLCJqdGkiOiJlNGUwNDU1Yi0xMjc4LTQzNGYtYTM4MS1lYWY2MGIxMThlNjQiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoiXHVjMGFjXHViYWE4IiwibmJmIjoxNjcwMDcwNzYyLCJleHAiOjE2NzAxNTcxNjIsInVzZXJfaWQiOjF9.Ur-LTGdd_2hBOqhBHV9Zz58C4GEDAvU5lU4zAhE0NOw"
+    );
+  
     formData.append("image", fileInput.files[0]);
-    const options = {
+  
+    var requestOptions = {
       method: "POST",
+      headers: myHeaders,
       body: formData,
     };
   
     // 이미지 업로드 API 요청
     const result = await fetch(
-      "http://127.0.0.1:5000/upload/post/image/",
-      options
+      "http://127.0.0.1:5000/upload/profile/image/",
+      requestOptions
     );
   
     return result;
@@ -62,7 +72,7 @@
    * form 태그 안에 있는 내용을 JSON 으로 변환합니다.
    */
   function getFormJson() {
-    let form = document.querySelector("#post-form");
+    let form = document.querySelector("#profile-form");
     let data = new FormData(form);
     let serializedFormData = serialize(data);
     return JSON.stringify(serializedFormData);
@@ -74,27 +84,28 @@
   function serialize(rawData) {
     let serializedData = {};
     for (let [key, value] of rawData) {
+      console.log(value);
       if (key == "imagefile") {
         continue;
       }
       if (value == "") {
-        console.log("hello");
         serializedData[key] = null;
       }
       serializedData[key] = value;
     }
+    console.log(serializedData);
     return serializedData;
   }
   
   /**
-   * 정제된 데이터를 넣어 게시물 작성 요청을 보냅니다.
+   * 정제된 데이터를 넣어 프로필 수정 요청을 보냅니다.
    */
-  async function submitPostData() {
+  async function submitProfileData() {
     // 인증을 위한 header 설정
     var myHeaders = new Headers();
     myHeaders.append(
       "Authorization",
-      "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNjcwMDcwNzYyLCJqdGkiOiJlNGUwNDU1Yi0xMjc4LTQzNGYtYTM4MS1lYWY2MGIxMThlNjQiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoiXHVjMGFjXHViYWE4IiwibmJmIjoxNjcwMDcwNzYyLCJleHAiOjE2NzAxNTcxNjIsInVzZXJfaWQiOjF9.Ur-LTGdd_2hBOqhBHV9Zz58C4GEDAvU5lU4zAhE0NOw" // 토큰을 이곳에다 붙여넣으세요.
+      "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6dHJ1ZSwiaWF0IjoxNjcwMDcwNzYyLCJqdGkiOiJlNGUwNDU1Yi0xMjc4LTQzNGYtYTM4MS1lYWY2MGIxMThlNjQiLCJ0eXBlIjoiYWNjZXNzIiwic3ViIjoiXHVjMGFjXHViYWE4IiwibmJmIjoxNjcwMDcwNzYyLCJleHAiOjE2NzAxNTcxNjIsInVzZXJfaWQiOjF9.Ur-LTGdd_2hBOqhBHV9Zz58C4GEDAvU5lU4zAhE0NOw"
     );
     myHeaders.append("Content-Type", "application/json");
   
@@ -103,17 +114,21 @@
   
     // 최종 옵션 설정
     var requestOptions = {
-      method: "POST",
+      method: "PUT",
       headers: myHeaders,
       body: raw,
       redirect: "follow",
     };
   
-    // 게시물 저장 요청
-    const response = await fetch("http://127.0.0.1:5000/posts/", requestOptions);
-  
-    if (response.status == 201) {
-      window.location.href = "http://localhost:3000/flastagram/posts/";
+    // 프로필 정보 수정 요청
+    const response = await fetch(
+      "http://127.0.0.1:5000/mypage/1",
+      requestOptions
+    );
+    console.log(response.status);
+    if (response.status == 200) {
+      // window.location.href = "http://localhost:3000/flastagram/posts/";
+      alert("프로필 수정이 완료되었습니다.");
     } else {
       alert(JSON.stringify(await response.json()));
     }
