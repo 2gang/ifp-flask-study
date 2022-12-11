@@ -31,11 +31,13 @@ class UserModel(db.Model):
   def follow(self, user):
     if not self.is_following(user):
       self.followed.append(user)
+      db.session.commit()
       return self
 
   def unfollow(self, user):
     if self.is_following(user):
       self.followed.remove(user)
+      db.session.commit()
       return self
 
   def is_following(self, user):
