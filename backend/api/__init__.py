@@ -96,7 +96,7 @@ def create_app():
     api.add_resource(RefreshToken, "/refresh/")
     
     #마이페이지 API
-    api.add_resource(MyPage, "/mypage/<int:id>")
+    api.add_resource(MyPage, "/mypage/<int:id>/")
     
     #이미지 업로드, 조회 API
     api.add_resource(PostImageUpload, "/upload/post/image/")
