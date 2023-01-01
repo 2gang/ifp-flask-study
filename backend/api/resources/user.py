@@ -1,4 +1,5 @@
 from os import access
+import random
 from api.models.user import UserModel
 from flask_restful import Resource, request
 from werkzeug.security import generate_password_hash
@@ -11,6 +12,7 @@ from api.models.user import RefreshTokenModel
 
 register_schema = UserRegisterSchema()
 user_schema = UserSchema()
+user_list_schema = UserSchema(many=True, exclude=["email", "created_at"])
 
 class UserRegister(Resource):
     """
@@ -173,3 +175,18 @@ class Follow(Resource):
         request_user.unfollow(user_to_unfollow)
         return "", 204  
     
+class Recommend(Resource):
+    @classmethod
+    @jwt_required()
+    def get(cls):
+        request_user = UserModel.find_by_username(get_jwt_identity())
+        return user_list_schema.dump(
+            random.sample(
+                list(
+                    #전체 사용자 - 현재 사용자 - 현재 사용자가 팔로우하고 있는 사람들
+                    set(UserModel.query.all())
+                    - set([request_user]) - set(request_user.followed.all())
+                ),
+                2, #리스트에서 2명 램덤 추출
+            )
+        )

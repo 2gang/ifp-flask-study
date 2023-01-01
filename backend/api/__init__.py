@@ -3,7 +3,7 @@ from flask import Flask, jsonify
 from flask_restful import Api
 from dotenv import load_dotenv
 from flask_cors import CORS
-from flask_uploads import configure_uploads
+from utils.flask_uploads import configure_uploads
 
 
 from flask_jwt_extended import JWTManager
@@ -15,7 +15,8 @@ from .db import db
 from .ma import ma
 from api.models import user, post, comment
 from .resources.post import PostList, Post, PostLike
-from .resources.user import UserRegister, UserLogin, RefreshToken, MyPage, Follow
+from .resources.user import (
+    UserRegister, UserLogin, RefreshToken, MyPage, Follow, Recommend)
 from .resources.image import PostImageUpload, ProfileImageUpload, Image
 from .resources.comment import CommentDetail, CommentList
 from .utils.image_upload import IMAGE_SET
@@ -107,4 +108,6 @@ def create_app():
     api.add_resource(CommentList, "/posts/<int:post_id>/comments/")
     api.add_resource(CommentDetail, "/posts/<int:post_id>/comments/<int:comment_id>/")
     
+    #랜덤추천 API
+    api.add_resource(Recommend, "/users/recommend-followers/")
     return app
