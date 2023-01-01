@@ -365,3 +365,8 @@ body {
     height: 300px;
   }
 }
+
+.action-btn:hover {
+  color: blue;
+  cursor: pointer;
+}
